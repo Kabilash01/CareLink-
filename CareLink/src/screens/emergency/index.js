@@ -1,9 +1,0 @@
-export { default as EmergencyHomeScreen } from './EmergencyHomeScreen';
-export { default as IncidentSelectScreen } from './IncidentSelectScreen';
-export { default as SymptomQuestionnaireScreen } from './SymptomQuestionnaireScreen';
-export { default as SeverityResultScreen } from './SeverityResultScreen';
-export { default as FirstAidInstructionsScreen } from './FirstAidInstructionsScreen';
-export { default as NextStepsScreen } from './NextStepsScreen';
-export { default as NearestHospitalsScreen } from './NearestHospitalsScreen';
-export { default as EmergencyContactsScreen } from './EmergencyContactsScreen';
-export { default as FollowupReminderScreen } from './FollowupReminderScreen';
