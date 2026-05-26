@@ -6,6 +6,14 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase';
 import { Stethoscope, Pill, Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 
+function getErrorMessage(err: unknown) {
+  if (err instanceof Error) return err.message;
+  if (err && typeof err === 'object' && 'message' in err) {
+    return String((err as { message?: unknown }).message);
+  }
+  return 'Registration failed';
+}
+
 function RegisterForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -97,8 +105,8 @@ function RegisterForm() {
         }, 1500);
       }
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : 'Registration failed';
-      setError(message);
+      console.error('Registration failed:', err);
+      setError(getErrorMessage(err));
     } finally {
       setLoading(false);
     }
