@@ -30,7 +30,7 @@ export default function SignUpScreen({ navigation }) {
     const { error } = await signUp(form.email.trim(), form.password, {
       full_name: form.name,
       phone: form.phone,
-      age: form.age,
+      age: form.age ? parseInt(form.age, 10) : null,
       gender: selectedGender,
     });
     setLoading(false);
