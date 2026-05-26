@@ -1,26 +1,65 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking, Alert } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, Linking, Alert, ActivityIndicator } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSizes, FontWeights, Spacing, Radius, Shadows } from '../../theme';
-import { Header, Button } from '../../components/common';
+import { Header, Button, LoadingOverlay } from '../../components/common';
 import { useLanguage } from '../../i18n';
-
-const initialContacts = [
-  { id: '1', name: 'Meena Devi', relation: 'Mother', phone: '+91 98765 43210', primary: true },
-  { id: '2', name: 'Ravi Kumar', relation: 'Brother', phone: '+91 98765 43211', primary: false },
-  { id: '3', name: 'Dr. Anand', relation: 'Family Doctor', phone: '+91 44 2830 0000', primary: false },
-];
+import { AuthContext } from '../../context/AuthContext';
+import { getEmergencyContacts, sendSOSAlert } from '../../services/emergencyService';
 
 export default function EmergencyContactsScreen({ navigation }) {
-  const [contacts] = useState(initialContacts);
+  const [contacts, setContacts] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [sosSending, setSosSending] = useState(false);
+  const { user } = useContext(AuthContext);
   const { t } = useLanguage();
+
+  // Fetch contacts when screen is focused
+  useFocusEffect(
+    React.useCallback(() => {
+      if (user?.id) {
+        fetchContacts();
+      }
+    }, [user])
+  );
+
+  const fetchContacts = async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error } = await getEmergencyContacts(user.id);
+    if (error) {
+      setError(error.message);
+      console.warn('[EmergencyContacts]', error.message);
+    } else {
+      setContacts(data || []);
+    }
+    setLoading(false);
+  };
 
   const handleCall = (phone) => {
     Linking.openURL(`tel:${phone.replace(/\s/g, '')}`);
   };
 
-  const handleSOS = () => {
-    Alert.alert(t('emergencyContacts.sosSent'), t('emergencyContacts.sosMessage'));
+  const handleSOS = async () => {
+    setSosSending(true);
+    try {
+      const { error } = await sendSOSAlert(user.id, {
+        location: 'Current Location', // TODO: Get actual GPS location
+        message: 'Emergency SOS Alert - Need Immediate Assistance',
+      });
+
+      if (error) {
+        Alert.alert(t('emergencyContacts.sosError'), error.message);
+      } else {
+        Alert.alert(t('emergencyContacts.sosSent'), t('emergencyContacts.sosMessage'));
+      }
+    } catch (err) {
+      Alert.alert(t('emergencyContacts.sosError'), err.message);
+    } finally {
+      setSosSending(false);
+    }
   };
 
   const renderContact = ({ item }) => (
@@ -31,7 +70,7 @@ export default function EmergencyContactsScreen({ navigation }) {
       <View style={{ flex: 1 }}>
         <View style={styles.nameRow}>
           <Text style={styles.contactName}>{item.name}</Text>
-          {item.primary && (
+          {item.is_primary && (
             <View style={styles.primaryBadge}>
               <Text style={styles.primaryText}>{t('emergencyContacts.primary')}</Text>
             </View>
@@ -53,34 +92,78 @@ export default function EmergencyContactsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
+      <LoadingOverlay visible={sosSending} />
       <Header title={t('emergencyContacts.title')} onBack={() => navigation.goBack()} />
+
       {/* SOS All */}
-      <TouchableOpacity style={styles.sosBar} onPress={handleSOS}>
+      <TouchableOpacity
+        style={[styles.sosBar, sosSending && { opacity: 0.6 }]}
+        onPress={handleSOS}
+        disabled={sosSending || loading}
+      >
         <Ionicons name="alert-circle" size={24} color={Colors.white} />
         <Text style={styles.sosText}>{t('emergencyContacts.alertAll')}</Text>
         <Ionicons name="chevron-forward" size={20} color={Colors.white} />
       </TouchableOpacity>
 
-      <FlatList data={contacts} keyExtractor={i => i.id} renderItem={renderContact}
-        contentContainerStyle={styles.list}
-        ListFooterComponent={
-          <View style={{ paddingTop: Spacing.md }}>
-            <Button label={t('emergencyContacts.addContact')} variant="outline" onPress={() => {}} />
-            <View style={styles.infoCard}>
-              <Ionicons name="information-circle" size={20} color={Colors.accent} />
-              <Text style={styles.infoText}>
-                {t('emergencyContacts.infoText')}
-              </Text>
+      {/* Loading State */}
+      {loading && (
+        <View style={styles.centerContainer}>
+          <ActivityIndicator size="large" color={Colors.accent} />
+          <Text style={styles.loadingText}>{t('common.loading')}</Text>
+        </View>
+      )}
+
+      {/* Error State */}
+      {error && !loading && (
+        <View style={styles.centerContainer}>
+          <Ionicons name="alert-circle" size={48} color={Colors.error} />
+          <Text style={styles.errorText}>{error}</Text>
+          <Button label={t('common.retry')} onPress={fetchContacts} style={{ marginTop: Spacing.md }} />
+        </View>
+      )}
+
+      {/* Contacts List */}
+      {!loading && !error && (
+        <FlatList
+          data={contacts}
+          keyExtractor={i => i.id}
+          renderItem={renderContact}
+          contentContainerStyle={styles.list}
+          ListEmptyComponent={
+            <View style={styles.emptyContainer}>
+              <Ionicons name="people" size={48} color={Colors.textMuted} />
+              <Text style={styles.emptyText}>{t('emergencyContacts.noContacts')}</Text>
+              <Button label={t('emergencyContacts.addContact')} variant="outline"
+                onPress={() => {}} style={{ marginTop: Spacing.md }} />
             </View>
-          </View>
-        }
-      />
+          }
+          ListFooterComponent={
+            contacts.length > 0 ? (
+              <View style={{ paddingTop: Spacing.md }}>
+                <Button label={t('emergencyContacts.addContact')} variant="outline" onPress={() => {}} />
+                <View style={styles.infoCard}>
+                  <Ionicons name="information-circle" size={20} color={Colors.accent} />
+                  <Text style={styles.infoText}>
+                    {t('emergencyContacts.infoText')}
+                  </Text>
+                </View>
+              </View>
+            ) : null
+          }
+        />
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: Colors.bgPrimary },
+  centerContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: Spacing.base },
+  loadingText: { fontSize: FontSizes.md, color: Colors.textMuted, marginTop: Spacing.md },
+  errorText: { fontSize: FontSizes.md, color: Colors.error, marginTop: Spacing.md, textAlign: 'center' },
+  emptyContainer: { alignItems: 'center', paddingVertical: Spacing.xl },
+  emptyText: { fontSize: FontSizes.md, color: Colors.textMuted, marginTop: Spacing.md },
   sosBar: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     backgroundColor: Colors.error, paddingVertical: Spacing.md, paddingHorizontal: Spacing.lg,
