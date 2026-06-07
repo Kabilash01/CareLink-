@@ -55,7 +55,7 @@ export default function AddPrescriptionScreen({ navigation }) {
     const granted = await requestPermission('camera');
     if (!granted) return;
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.85,
       allowsEditing: true,
       aspect: [3, 4],
@@ -74,7 +74,7 @@ export default function AddPrescriptionScreen({ navigation }) {
     const granted = await requestPermission('gallery');
     if (!granted) return;
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.85,
       allowsEditing: true,
       aspect: [3, 4],

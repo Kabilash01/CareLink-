@@ -33,18 +33,15 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "81c10fc1-70b1-4cd3-b79c-450e4bdf180f"
-      }
-    },
-    "runtimeVersion": "1.0.0",
-    "updates": {
-      "url": "https://u.expo.dev/81c10fc1-70b1-4cd3-b79c-450e4bdf180f"
-    },
     "plugins": [
       "expo-sharing",
       "expo-font"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "8d45a666-c526-4cbc-96ba-bffed5fef1b3"
+      }
+    },
+    "owner": "kabilash.1"
   }
 }

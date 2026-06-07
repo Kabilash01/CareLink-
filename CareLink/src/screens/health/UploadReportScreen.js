@@ -52,7 +52,7 @@ export default function UploadReportScreen({ navigation }) {
       }
     }
     const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      mediaTypes: ['images'],
       quality: 0.8,
     });
 

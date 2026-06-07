@@ -27,7 +27,7 @@ export default function SignUpScreen({ navigation }) {
       return;
     }
     setLoading(true);
-    const { error } = await signUp(form.email.trim(), form.password, {
+    const { data, error } = await signUp(form.email.trim(), form.password, {
       full_name: form.name,
       phone: form.phone,
       age: form.age ? parseInt(form.age, 10) : null,
@@ -36,9 +36,12 @@ export default function SignUpScreen({ navigation }) {
     setLoading(false);
     if (error) {
       Alert.alert(t('auth.signUpFailed'), error.message);
+    } else if (data?.session) {
+      // The auth listener switches the root navigator to Main automatically.
+      Alert.alert(t('auth.createAccount'), 'Account created successfully.');
     } else {
       Alert.alert(t('auth.checkEmail'), t('auth.confirmationSent'), [
-        { text: t('common.ok'), onPress: () => navigation.navigate('Login') },
+        { text: t('common.ok'), onPress: () => navigation.replace('Login') },
       ]);
     }
   };

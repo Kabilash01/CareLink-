@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import {
   View, Text, StyleSheet, FlatList, TouchableOpacity,
-  Linking, Modal, SafeAreaView, StatusBar, ActivityIndicator,
+  Linking, Modal, StatusBar, ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import * as Location from 'expo-location';
 import { Ionicons } from '@expo/vector-icons';
 import { Colors, FontSizes, FontWeights, Spacing, Radius, Shadows } from '../../theme';
