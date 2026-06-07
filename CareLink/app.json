@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "CareLink",
-    "slug": "CareLink",
+    "slug": "carelink",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -39,7 +39,7 @@
     ],
     "extra": {
       "eas": {
-        "projectId": "8d45a666-c526-4cbc-96ba-bffed5fef1b3"
+        "projectId": "3340240f-4441-4916-89f4-a322156e9166"
       }
     },
     "owner": "kabilash.1"
